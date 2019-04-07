@@ -52,11 +52,33 @@ impl Game
 
 
     fn update(&mut self, arg: &UpdateArgs){
-       self.ball.update(&mut self.gl, arg);
+       
+        self.ball.update(&mut self.gl, arg);
 
-        if (self.ball.a_pos.1 <= 0) || (self.ball.a_pos.1 >= (self.cols - 1)){
+        if ((self.ball.a_pos.1 < 10) || (self.ball.a_pos.1 >= (self.cols - 20))){
+            println!("colisión");
             self.ball.up_collision();
         }
+
+        if ((self.ball.a_pos.0 <= 40) && (self.ball.a_pos.0 >= 35)){
+
+            if ((self.ball.a_pos.1 >= self.lpad.lenght[0].1) && (self.ball.a_pos.1 < self.lpad.lenght[1].1)){
+            self.ball.lateral_collision();
+            }
+        }
+
+        if((self.ball.a_pos.0 >= 540) && (self.ball.a_pos.0 <= 545)){
+
+            if ((self.ball.a_pos.1 >= self.rpad.lenght[0].1) && (self.ball.a_pos.1 < self.rpad.lenght[1].1)){
+            self.ball.lateral_collision();
+            }
+       }
+
+        if ((self.ball.a_pos.1 <= 0) || (self.ball.a_pos.1 >= (self.cols - 1))){
+            self.ball.up_collision();
+        }
+
+    
 /*
         if (self.ball.a_pos.0 <= ) || (self.ball.a_pos.0 >= cols){
             ball.lateral_collision();
@@ -128,8 +150,8 @@ impl Pad
             .map(|(x,y)| {
 
                 graphics::rectangle::square(
-                    (x*20) as f64,
-                    (y*20) as f64,
+                    (*x) as f64,
+                    (*y) as f64,
                     20_f64)
             })
             .collect();
@@ -152,12 +174,12 @@ impl Pad
 
             match self.dir {
                 Direction::Up => {
-                    self.lenght[0].1 = self.lenght[0].1 - 1;
-                    self.lenght[1].1 = self.lenght[1].1 - 1;
+                    self.lenght[0].1 = self.lenght[0].1 - 20;
+                    self.lenght[1].1 = self.lenght[1].1 - 20;
                 }
                 Direction::Down => {
-                    self.lenght[0].1 = self.lenght[0].1 + 1;
-                    self.lenght[1].1 = self.lenght[1].1 + 1;
+                    self.lenght[0].1 = self.lenght[0].1 + 20;
+                    self.lenght[1].1 = self.lenght[1].1 + 20;
                 }
                 Direction::Null => { }
             }
@@ -177,7 +199,9 @@ struct Ball
 
     impact: bool,
     dir: (i32,i32),
-
+    
+    changed_u: i32,
+    changed_l: i32,
 }
 
 
@@ -189,8 +213,8 @@ impl Ball
         let IDK: [f32; 4] = [1.0, 0.0, 1.0, 1.0];
   
         let square = graphics::rectangle::square(
-            (self.a_pos.0 * 10) as f64,
-            (self.a_pos.1 * 10) as f64,
+            (self.a_pos.0) as f64,
+            (self.a_pos.1) as f64,
             20_f64);
 
 
@@ -204,36 +228,60 @@ impl Ball
 
     fn update(&mut self, gl: &mut GlGraphics, args: &UpdateArgs){
         
-        self.a_pos.0 = self.a_pos.0 + self.dir.0;
-        self.a_pos.1 = self.a_pos.1 + self.dir.1;
+        self.a_pos.0 = self.a_pos.0 + (self.dir.0);
+        self.a_pos.1 = self.a_pos.1 + (self.dir.1);
+
+        if(self.changed_u != 0){
+            self.changed_u = self.changed_u - 1;
+        }
+
+        if(self.changed_l != 0){
+            self.changed_l = self.changed_l - 1;
+        }
+
+        //println!("x: {}, y: {}", self.a_pos.0, self.a_pos.1);
 
     }
 
     fn up_collision(&mut self){
-        self.dir.1 = -self.dir.1;
+
+        if(self.changed_u == 0){
+            self.dir.1 = -self.dir.1;
+            self.changed_u = 10;
+        }
     }
-/*
+
     fn lateral_collision(&mut self){
-        self.dir.1 = -self.dir.1;
+        if(self.changed_l == 0){
+            self.dir.0 = -self.dir.0;
+            self.changed_l = 10;
+        }
     }
-*/
+
 }
 
 
 fn main() {
 
     let opengl = OpenGL::V3_2;
+    
+    let mut n1: i32 = 0;
+    let mut n2: i32 = 0;
+    
+    while((n1 == 0) || (n2 == 0)){
 
-//    let n1: i32 = rand::thread_rng().gen_range(-3, 3);
-//    let n2: i32 = rand::thread_rng().gen_range(-3, 3);
+    
+    n1 = rand::thread_rng().gen_range(-3, 3);
+    n2 = rand::thread_rng().gen_range(-3, 3);
    
-    let n1: i32 = 1;
-    let n2: i32 = 1;
+   }
+    //let n1: i32 = 1;
+    //let n2: i32 = 1;
     //println!("N1: {} N2: {}", n1, n2);
 
 
     let mut window: GlutinWindow = WindowSettings::new(
-            "snake game",
+            "Pong Game",
             [600,400]
             ).opengl(opengl)
                 .exit_on_esc(true)
@@ -244,35 +292,38 @@ fn main() {
         
         gl: GlGraphics::new(opengl),
         
-        cols: 40,
-        rows: 60,
+        cols: 400,
+        rows: 600,
 
         lpad: Pad {
-            lenght: vec![(1,9), (1,10)],
+            lenght: vec![(20,180), (20,200)],
             dir: Direction::Null,
             mov: false,
         },
 
         rpad: Pad {
-            lenght: vec![(28,9), (28,10)],
+            lenght: vec![(560,180), (560,200)],
             dir: Direction::Null,
             mov: false,
         },
 
         ball: Ball {
-            p_pos: (15,10),
-            a_pos: (15,10),
-            n_pos: (15,10),
+            p_pos: (300,200),
+            a_pos: (300,200),
+            n_pos: (300,200),
             
             dir: (n1, n2),
             impact: false,
+
+            changed_u: 0,
+            changed_l: 0,
         }
     
    };
 
 
 
-    let mut events = Events::new(EventSettings::new()).ups(2);
+    let mut events = Events::new(EventSettings::new()).ups(60);
     while let Some(e) = events.next(&mut window) {
 
         if let Some(r) = e.render_args() {

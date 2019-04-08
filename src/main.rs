@@ -91,7 +91,7 @@ impl Game
 */
 
     }
-  
+
 
     fn pressed(&mut self, btn: &Button){
         
@@ -117,6 +117,20 @@ impl Game
         self.rpad.update();
     }
   
+
+    fn die(&mut self) -> bool {
+
+        if(self.ball.a_pos.0 <= 0){
+            println!("Ha ganado el jugador 2");
+            return true;
+       }
+        if(self.ball.a_pos.0 >= 600){
+            println!("Ha ganado el jugador 1");
+            return true;
+        }
+
+    return false;
+    }
 }
 
 
@@ -342,12 +356,11 @@ fn main() {
             }
         }
 
-        /*
+
         if let Some(d) = e.update_args() {
             if game.die() {
                 break;       
             }
         }
-        */
     }
 }
